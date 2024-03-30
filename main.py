@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import pandas as pd
 import cv2
@@ -45,7 +44,7 @@ def save_video(parent_path, file_name, f0):
 
 def main():
     parent_folder = 'exp_data'
-    folder_name = 'lzh'
+    folder_name = 'name'
     folder_path = os.path.join(parent_folder, folder_name)
 
     # 检查文件夹是否存在，如果不存在，则创建
@@ -59,6 +58,7 @@ def main():
     current_pos_los = []
     current_vel_log = []
     current_force_log = []
+    time_log=[]
 
     target_pos = 100
     target_m00 = 10
@@ -121,7 +121,8 @@ def main():
             rounded_data = np.clip(np.round(dm), 0, 255)
             dm_uint8 = rounded_data.astype(np.uint8)
             cv2.imshow('Depth Map', dm_uint8)  # 240*320
-
+            if count ==60:
+                start_log_time=time.time()
             if count > 60:
                 M = cv2.moments(dm_uint8)
                 m00 = M["m00"] / 320 / 240  # 0~50
@@ -141,6 +142,7 @@ def main():
                     current_pos_los.append(status["pos"])
                     current_vel_log.append(status["speed"])
                     current_force_log.append(status["force"])
+                    time_log.append(time.time()-start_log_time)
 
             count += 1
             end_time = time.time()
@@ -149,7 +151,7 @@ def main():
     except KeyboardInterrupt:
         print('Interrupted!')
         gripper.moveto(140, 150, 500, 0.5, tolerance=10, waitflag=False)
-        df_log={'m00': m00_log, 'target_pos': target_pos_log, 'current_pos': current_pos_los, 'current_vel': current_vel_log, 'current_force': current_force_log}
+        df_log={'time':time_log,'m00': m00_log, 'target_pos': target_pos_log, 'current_pos': current_pos_los, 'current_vel': current_vel_log, 'current_force': current_force_log}
         df = pd.DataFrame(df_log)
         df.to_csv(os.path.join(folder_path,'adaptive_grasp_log.csv'),mode='w',index=True,header=True)
         dev_right.stop_video()
