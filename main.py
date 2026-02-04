@@ -214,7 +214,7 @@ def main():
                 M = cv2.moments(dm_uint8_right)
                 m00_right = M["m00"] / 320 / 240  # 0~50
                 M_left=cv2.moments(dm_uint8_left)
-                m00_left=M_left["m00"]/320/240
+                m00_left=M_left["m00"] / 320 / 240
                 entropy_x_right, entropy_y_right = flow_right.get_flow_entropy()
                 entropy_x_left, entropy_y_left = flow_left.get_flow_entropy()
                 delta_pos = pid.get_result(target_m00 - m00_right)
@@ -222,6 +222,13 @@ def main():
                 status = gripper.get_status()
                 gripper.moveto(target_pos, 150, 500, 0.2, tolerance=1, waitflag=False)
                 print("m00", m00_right, "ent_x_r", entropy_x_right, "ent_y_r", entropy_y_right, 'target_pos', target_pos)
+
+                # Create a 2x2 grid of images
+                top_row = np.hstack((bigframe_left, bigframe_right))
+                bottom_row = np.hstack((dm_uint8_left, dm_uint8_right))
+                combined_image = np.vstack((top_row, bottom_row))
+
+                cv2.imshow('Combined Image', combined_image)  # Show the combined image
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
